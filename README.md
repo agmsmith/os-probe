@@ -10,7 +10,7 @@ history, though the latest should be able to detect older Haiku too.
 
 Then regenerate the GRUB boot configuration file.  This will happen
 automatically the next time your kernel is updated.  For old school MBR BIOS
-boot computers, the command is `grub2-mkconfig --output /boot/grub2/grub.cfg`.
+boot computers, the command is `grub2-mkconfig --output /boot/grub2/grub.cfg`
 Computers using the newer EFI boot system have a slightly different path to
 grub.cfg.
 
