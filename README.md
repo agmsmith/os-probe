@@ -5,9 +5,8 @@ add it to the GRUB boot menu.
 
 Copy the 83haiku file to your Linux system in the os-probes subdirectory,
 usually (in Fedora at least) it will be /usr/libexec/os-probes/mounted/83haiku
-Perhaps use a slightly different file name and don't overwrite 83haiku if you
-want to keep the functionality to boot older Haiku.  You can find older 83haiku
-versions in the https://github.com/agmsmith/os-probe history.
+You can find older 83haiku versions in the https://github.com/agmsmith/os-probe
+history, though the latest should be able to detect older Haiku too.
 
 Then regenerate the GRUB boot configuration file.  This will happen
 automatically the next time your kernel is updated.  For old school MBR BIOS

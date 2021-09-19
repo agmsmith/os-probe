@@ -7,47 +7,54 @@ partition="$1"
 mpoint="$2"
 type="$3"
 
-# Weed out stuff that doesn't apply to us
+# Weed out stuff that doesn't apply to us.  Be quiet if it is not ours.
 case "$type" in
-     befs|befs_be) debug "$partition is a BeFS partition" ;;
-     *) debug "$partition is not a BeFS partition: exiting"; exit 1 ;;
+    befs|befs_be) debug "$partition is a BeFS partition, examining it." ;;
+    *) exit 1 ;;
 esac
 
+# Haiku BIOS boot sector has a few recognizable strings, with extra gibberish
+# in the middle for package manager Haiku or only a single byte for old Haiku.
 if head -c 512 "$partition" | grep -aqs "system.*haiku_loader"; then
-     debug "Stage 1 bootloader found"
+    debug "Stage 1 Haiku bootloader found."
 else
-     debug "Stage 1 bootloader not found: exiting"
-     exit 1
+    debug "Stage 1 Haiku bootloader not found: exiting"
+    exit 1
 fi
 
 system="$(item_in_dir "system" "$mpoint")"
 packages="$(item_in_dir "packages" "$mpoint/$system")"
 found=
+
+# Check for pre-package manager Haiku.
 if [ "$system" != "" ] &&
-      item_in_dir -q "haiku_loader" "$mpoint/$system" &&
-      (item_in_dir -q "kernel_x86" "$mpoint/$system" ||
-          item_in_dir -q "kernel_x86_64" "$mpoint/$system")
-  then
-     found=1
+    item_in_dir -q "haiku_loader" "$mpoint/$system" &&
+    (item_in_dir -q "kernel_x86" "$mpoint/$system" ||
+    item_in_dir -q "kernel_x86_64" "$mpoint/$system")
+then
+    debug "Pre-package manager Haiku stage 2 bootloader & kernel found."
+    found=1
 fi
 
+# Check for package based Haiku.  Second stage boot loader is inside a package
+# (conveniently not compressed so the first stage can load and jump to it) and
+# the kernel is in another package.
 if [ "$found" = "" ] && [ "$packages" != "" ] &&
-     item_in_dir -q "haiku_loader\-.*" "$mpoint/$system/$packages" &&
-     (item_in_dir -q "haiku_x86\-.*" "$mpoint/$system/$packages" ||
-         item_in_dir -q "haiku_x86_gcc2\-.*" "$mpoint/$system/$packages" ||
-         item_in_dir -q "haiku_x86_64\-.*" "$mpoint/$system/$packages")
+    item_in_dir -q "haiku_loader-r[0-9].*hpkg" "$mpoint/$system/$packages" &&
+    item_in_dir -q "haiku-r[0-9].*hpkg" "$mpoint/$system/$packages"
 then
-     found=1
+    debug "Post-package manager Haiku stage 2 bootloader & kernel found."
+    found=1
 fi
 
 if [ "$found" != "" ]
 then
-     debug "Stage 2 bootloader and kernel found"
-     label="$(count_next_label Haiku)"
-     result "$partition:Haiku:$label:chain"
-     exit 0
+    debug "Haiku stage 2 bootloader and kernel found, adding a GRUB entry."
+    label="$(count_next_label Haiku)"
+    result "$partition:Haiku:$label:chain"
+    exit 0
 else
-     debug "Stage 2 bootloader and kernel not found: exiting"
-     exit 1
+    debug "Haiku stage 2 bootloader and kernel not found: exiting"
+    exit 1
 fi
 
