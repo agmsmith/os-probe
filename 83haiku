@@ -1,5 +1,7 @@
 #!/usr/bin/sh
 # Detects Haiku OS, both Package Manager and Original on BeFS partitions.
+# Requires that the BeFS volumes be already mounted and accessible in Linux,
+# otherwise it won't find anything.
 
 . /usr/share/os-prober/common.sh
 
